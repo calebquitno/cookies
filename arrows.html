@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Purple Tunnel Runner</title>
+
+<style>
+
+html,body{
+    margin:0;
+    overflow:hidden;
+    background:#030006;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+canvas{
+    display:block;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<script>
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    center.x = canvas.width/2;
+    center.y = canvas.height/2;
+
+    player.x = canvas.width/2;
+    player.y = canvas.height-45;
+}
+
+window.addEventListener("resize",resize);
+
+const TAU=Math.PI*2;
+
+const center={x:0,y:0};
+
+const keys={
+    left:false,
+    right:false
+};
+
+window.addEventListener("keydown",e=>{
+    if(e.key=="ArrowLeft") keys.left=true;
+    if(e.key=="ArrowRight") keys.right=true;
+});
+
+window.addEventListener("keyup",e=>{
+    if(e.key=="ArrowLeft") keys.left=false;
+    if(e.key=="ArrowRight") keys.right=false;
+});
+
+const player={
+    x:0,
+    y:0,
+
+    angle:Math.PI/2,
+
+    size:10,
+
+    hp:1,
+
+    pulse:0,
+
+    engine:0
+};
+
+let tunnelRotation=0;
+let rotationVelocity=0;
+
+let score=0;
+
+let screenShake=0;
+let flash=0;
+
+const stars=[];
+
+for(let i=0;i<180;i++){
+
+    stars.push({
+
+        x:Math.random()*2000-1000,
+        y:Math.random()*2000-1000,
+
+        s:Math.random()*2+0.5,
+
+        a:Math.random()
+
+    });
+
+}
+
+const particles=[];
+
+function addParticle(x,y,color,size){
+
+    particles.push({
+
+        x:x,
+        y:y,
+
+        vx:(Math.random()-0.5)*6,
+        vy:(Math.random()-0.5)*6,
+
+        size:size,
+
+        color:color,
+
+        alpha:1
+
+    });
+
+}
+
+const rings=[];
+
+let spawnTimer=0;
+
+let spawnDelay=90;
+
+let gapSize=1.1;
+
+function newRing(){
+
+    const gapCount=3+Math.floor(Math.random()*2);
+
+    const gaps=[];
+
+    for(let i=0;i<gapCount;i++){
+
+        gaps.push(Math.random()*TAU);
+
+    }
+
+    rings.push({
+
+        radius:10,
+
+        width:18,
+
+        gaps:gaps,
+
+        gapSize:gapSize,
+
+        hit:false,
+
+        pulse:Math.random()*TAU
+
+    });
+
+    if(gapSize>0.45)
+        gapSize*=0.9985;
+
+    if(spawnDelay>48)
+        spawnDelay*=0.998;
+
+}
+
+function angleDifference(a,b){
+
+    let d=Math.abs(a-b)%TAU;
+
+    return d>Math.PI?TAU-d:d;
+
+}
+
+function shake(power){
+
+    if(power>screenShake)
+        screenShake=power;
+
+}
+
+resize();
+
+function update(){
+
+    score++;
+
+    //------------------------------------
+    // rotation controls
+    //------------------------------------
+
+    if(keys.left)
+        rotationVelocity-=0.006;
+
+    if(keys.right)
+        rotationVelocity+=0.006;
+
+    rotationVelocity*=0.92;
+
+    rotationVelocity=Math.max(
+        -0.08,
+        Math.min(0.08,rotationVelocity)
+    );
+
+    tunnelRotation+=rotationVelocity;
+
+    //------------------------------------
+
+    player.hp=Math.min(
+        1,
+        player.hp+0.0007
+    );
+
+    player.engine+=0.4;
+
+    spawnTimer++;
+
+    if(spawnTimer>spawnDelay){
+
+        spawnTimer=0;
+
+        newRing();
+
+    }
+
+    //------------------------------------
+    // update rings
+    //------------------------------------
+
+    const playerRadius=Math.hypot(
+        player.x-center.x,
+        player.y-center.y
+    );
+
+    const playerAngle=Math.atan2(
+        player.y-center.y,
+        player.x-center.x
+    );
+
+    for(let r of rings){
+
+        r.radius+=2.1;
+
+        r.pulse+=0.05;
+
+        if(
+            !r.hit &&
+            Math.abs(r.radius-playerRadius)<r.width
+        ){
+
+            let safe=false;
+
+            for(let g of r.gaps){
+
+                const worldGap=g+tunnelRotation;
+
+                if(
+                    angleDifference(
+                        playerAngle,
+                        worldGap
+                    )<r.gapSize/2
+                ){
+                    safe=true;
+                    break;
+                }
+
+            }
+
+            if(!safe){
+
+                r.hit=true;
+
+                player.hp-=0.4;
+
+                if(player.hp<0)
+                    player.hp=0;
+
+                shake(22);
+
+                flash=1;
+
+                for(let i=0;i<90;i++){
+
+                    addParticle(
+                        player.x,
+                        player.y,
+                        "#ff77ff",
+                        3+Math.random()*5
+                    );
+
+                }
+
+            }
+            else{
+
+                for(let i=0;i<18;i++){
+
+                    addParticle(
+                        player.x,
+                        player.y,
+                        "#bb66ff",
+                        2+Math.random()*2
+                    );
+
+                }
+
+            }
+
+        }
+
+    }
+
+    // ----- CONTINUES IN PART 2 -----
+    //------------------------------------
+    // remove old rings
+    //------------------------------------
+
+    for(let i=rings.length-1;i>=0;i--){
+
+        if(rings[i].radius >
+            Math.max(canvas.width,canvas.height)*1.2){
+
+            rings.splice(i,1);
+
+        }
+
+    }
+
+    //------------------------------------
+    // particles
+    //------------------------------------
+
+    addParticle(
+        player.x,
+        player.y+8,
+        "#aa55ff",
+        2+Math.random()*2
+    );
+
+    for(let i=particles.length-1;i>=0;i--){
+
+        const p=particles[i];
+
+        p.x+=p.vx;
+        p.y+=p.vy;
+
+        p.vx*=0.98;
+        p.vy*=0.98;
+
+        p.alpha*=0.97;
+
+        p.size*=0.992;
+
+        if(p.alpha<0.02){
+
+            particles.splice(i,1);
+
+        }
+
+    }
+
+    flash*=0.92;
+    screenShake*=0.90;
+
+}
+
+///////////////////////////////////////////////////////
+
+function draw(){
+
+ctx.setTransform(
+    1,
+    0,
+    0,
+    1,
+    (Math.random()-0.5)*screenShake,
+    (Math.random()-0.5)*screenShake
+);
+
+//////////////////////////////////////
+// background
+//////////////////////////////////////
+
+const bg=ctx.createRadialGradient(
+    center.x,
+    center.y,
+    0,
+    center.x,
+    center.y,
+    canvas.height
+);
+
+bg.addColorStop(0,"#24003a");
+bg.addColorStop(0.4,"#120020");
+bg.addColorStop(1,"#020005");
+
+ctx.fillStyle=bg;
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+//////////////////////////////////////
+// stars
+//////////////////////////////////////
+
+ctx.shadowBlur=18;
+ctx.shadowColor="#cc88ff";
+
+for(const s of stars){
+
+    ctx.fillStyle=
+        "rgba(220,180,255,"+
+        (0.15+s.a*0.5)+")";
+
+    ctx.beginPath();
+
+    ctx.arc(
+
+        center.x+s.x*0.8,
+
+        center.y+s.y*0.8,
+
+        s.s,
+
+        0,
+
+        TAU
+
+    );
+
+    ctx.fill();
+
+}
+
+//////////////////////////////////////
+// glowing center
+//////////////////////////////////////
+
+ctx.shadowBlur=80;
+ctx.shadowColor="#aa33ff";
+
+ctx.fillStyle="#aa55ff";
+
+ctx.beginPath();
+
+ctx.arc(
+
+center.x,
+center.y,
+
+18,
+
+0,
+
+TAU
+
+);
+
+ctx.fill();
+
+//////////////////////////////////////
+// rings
+//////////////////////////////////////
+
+ctx.save();
+
+ctx.translate(center.x,center.y);
+
+ctx.rotate(tunnelRotation);
+
+for(const r of rings){
+
+ctx.shadowBlur=
+35+
+Math.sin(r.pulse)*12;
+
+ctx.shadowColor="#dd66ff";
+
+ctx.strokeStyle="#dd88ff";
+
+ctx.lineWidth=r.width;
+
+let last=0;
+
+const sorted=[...r.gaps].sort((a,b)=>a-b);
+
+for(let i=0;i<sorted.length;i++){
+
+const g=sorted[i];
+
+ctx.beginPath();
+
+ctx.arc(
+
+0,
+
+0,
+
+r.radius,
+
+last,
+
+g-r.gapSize/2
+
+);
+
+ctx.stroke();
+
+last=g+r.gapSize/2;
+
+}
+
+ctx.beginPath();
+
+ctx.arc(
+
+0,
+
+0,
+
+r.radius,
+
+last,
+
+TAU
+
+);
+
+ctx.stroke();
+
+}
+
+ctx.restore();
+
+//////////////////////////////////////
+// particles
+//////////////////////////////////////
+
+for(const p of particles){
+
+ctx.globalAlpha=p.alpha;
+
+ctx.shadowBlur=28;
+
+ctx.shadowColor=p.color;
+
+ctx.fillStyle=p.color;
+
+ctx.beginPath();
+
+ctx.arc(
+
+p.x,
+
+p.y,
+
+p.size,
+
+0,
+
+TAU
+
+);
+
+ctx.fill();
+
+}
+
+ctx.globalAlpha=1;
+
+//////////////////////////////////////
+// player pulse
+//////////////////////////////////////
+
+let pulseRate=
+
+2+
+
+(1-player.hp)*9;
+
+let pulse=
+
+0.35+
+
+0.65*Math.abs(
+
+Math.sin(
+
+performance.now()/450
+
+*pulseRate
+
+)
+
+);
+
+let alpha=
+
+player.hp>0.995
+
+?1
+
+:pulse;
+
+//////////////////////////////////////
+// engine exhaust
+//////////////////////////////////////
+
+ctx.shadowBlur=30;
+
+ctx.shadowColor="#bb55ff";
+
+ctx.strokeStyle="#aa55ff";
+
+for(let i=0;i<5;i++){
+
+ctx.beginPath();
+
+ctx.moveTo(
+
+player.x,
+
+player.y+8
+
+);
+
+ctx.lineTo(
+
+player.x+
+
+(Math.random()-0.5)*8,
+
+player.y+
+
+20+
+
+Math.random()*16
+
+);
+
+ctx.stroke();
+
+}
+
+//////////////////////////////////////
+// ship
+//////////////////////////////////////
+
+ctx.save();
+
+ctx.translate(
+
+player.x,
+
+player.y
+
+);
+
+ctx.shadowBlur=40;
+
+ctx.shadowColor="#ff99ff";
+
+ctx.fillStyle=
+
+"rgba(255,190,255,"+
+
+alpha+
+
+")";
+
+ctx.beginPath();
+
+ctx.moveTo(
+0,
+-12
+);
+
+ctx.lineTo(
+8,
+10
+);
+
+ctx.lineTo(
+0,
+5
+);
+
+ctx.lineTo(
+-8,
+10
+);
+
+ctx.closePath();
+
+ctx.fill();
+
+ctx.restore();
+
+    // ----- CONTINUES IN PART 3 -----
+//////////////////////////////////////
+// HUD
+//////////////////////////////////////
+
+ctx.setTransform(
+    1,
+    0,
+    0,
+    1,
+    0,
+    0
+);
+
+ctx.shadowBlur=0;
+
+ctx.fillStyle="#220033";
+
+ctx.fillRect(
+20,
+20,
+240,
+16
+);
+
+ctx.fillStyle="#cc55ff";
+
+ctx.fillRect(
+20,
+20,
+240*player.hp,
+16
+);
+
+ctx.strokeStyle="#ffffff";
+
+ctx.strokeRect(
+20,
+20,
+240,
+16
+);
+
+ctx.fillStyle="#ffffff";
+
+ctx.font="20px Arial";
+
+ctx.fillText(
+"HP",
+20,
+58
+);
+
+ctx.fillText(
+"Score: "+Math.floor(score/10),
+20,
+90
+);
+
+//////////////////////////////////////
+// screen flash
+//////////////////////////////////////
+
+if(flash>0.01){
+
+ctx.fillStyle=
+"rgba(255,220,255,"+
+(flash*0.30)+
+")";
+
+ctx.fillRect(
+0,
+0,
+canvas.width,
+canvas.height
+);
+
+}
+
+//////////////////////////////////////
+// center bloom
+//////////////////////////////////////
+
+ctx.save();
+
+ctx.globalCompositeOperation="lighter";
+
+let glow=ctx.createRadialGradient(
+center.x,
+center.y,
+0,
+center.x,
+center.y,
+160
+);
+
+glow.addColorStop(0,"rgba(255,120,255,0.35)");
+glow.addColorStop(0.5,"rgba(170,60,255,0.12)");
+glow.addColorStop(1,"rgba(0,0,0,0)");
+
+ctx.fillStyle=glow;
+
+ctx.beginPath();
+ctx.arc(
+center.x,
+center.y,
+160,
+0,
+TAU
+);
+ctx.fill();
+
+ctx.restore();
+
+//////////////////////////////////////
+// game over
+//////////////////////////////////////
+
+if(player.hp<=0){
+
+ctx.fillStyle="rgba(0,0,0,0.45)";
+ctx.fillRect(
+0,
+0,
+canvas.width,
+canvas.height
+);
+
+ctx.textAlign="center";
+
+ctx.shadowBlur=40;
+ctx.shadowColor="#ff55ff";
+
+ctx.fillStyle="#ffffff";
+
+ctx.font="64px Arial";
+
+ctx.fillText(
+"GAME OVER",
+canvas.width/2,
+canvas.height/2-20
+);
+
+ctx.font="28px Arial";
+
+ctx.fillText(
+"Refresh to play again",
+canvas.width/2,
+canvas.height/2+40
+);
+
+ctx.textAlign="left";
+
+}
+
+}
+
+//////////////////////////////////////
+// MAIN LOOP
+//////////////////////////////////////
+
+function gameLoop(){
+
+    if(player.hp>0){
+
+        update();
+
+    }
+
+    draw();
+
+    requestAnimationFrame(gameLoop);
+
+}
+
+gameLoop();
+
+</script>
+
+</body>
+</html>
