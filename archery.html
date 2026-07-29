@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Pixel Archery</title>
+<style>
+body{margin:0;background:#222;overflow:hidden}
+canvas{display:block;margin:auto;background:linear-gradient(#87ceeb,#dff5ff 60%,#6ab04c 60%,#4e8c31)}
+</style>
+</head>
+<body>
+<canvas id="c" width="900" height="600"></canvas>
+
+<script>
+const c=document.getElementById("c"),x=c.getContext("2d");
+
+let angle=-0.5,power=18,score=0;
+let arrow=null;
+const target={x:780,y:150,r:45};
+
+const keys={};
+
+onkeydown=e={
+}.handleEvent||((e)=>{
+keys[e.key]=1;
+if(e.key==" "&&!arrow){
+arrow={
+x:80,
+y:520,
+vx:Math.cos(angle)*power,
+vy:Math.sin(angle)*power
+};
+}
+});
+
+onkeyup=e=>keys[e.key]=0;
+
+function update(){
+
+if(!arrow){
+
+if(keys.ArrowUp)angle-=0.03;
+if(keys.ArrowDown)angle+=0.03;
+
+if(keys.ArrowRight)power=Math.min(35,power+0.2);
+if(keys.ArrowLeft)power=Math.max(6,power-0.2);
+
+}else{
+
+arrow.x+=arrow.vx;
+arrow.y+=arrow.vy;
+
+arrow.vy+=0.18;
+
+let dx=arrow.x-target.x;
+let dy=arrow.y-target.y;
+
+if(Math.hypot(dx,dy)<target.r){
+
+score++;
+arrow=null;
+
+target.y=80+Math.random()*360;
+
+}
+
+if(arrow&&(
+arrow.x>920||
+arrow.y>620||
+arrow.y<0)){
+
+arrow=null;
+
+}
+
+}
+
+}
+
+function draw(){
+
+x.clearRect(0,0,900,600);
+
+x.fillStyle="#6b3f15";
+x.fillRect(target.x-6,target.y-80,12,160);
+
+x.fillStyle="red";
+x.beginPath();
+x.arc(target.x,target.y,target.r,0,7);
+x.fill();
+
+x.fillStyle="white";
+x.beginPath();
+x.arc(target.x,target.y,30,0,7);
+x.fill();
+
+x.fillStyle="red";
+x.beginPath();
+x.arc(target.x,target.y,15,0,7);
+x.fill();
+
+x.strokeStyle="#5b3412";
+x.lineWidth=5;
+
+x.beginPath();
+x.moveTo(80,520);
+x.lineTo(
+80+Math.cos(angle)*40,
+520+Math.sin(angle)*40
+);
+x.stroke();
+
+if(arrow){
+
+x.strokeStyle="gold";
+x.lineWidth=3;
+
+let a=Math.atan2(arrow.vy,arrow.vx);
+
+x.beginPath();
+x.moveTo(
+arrow.x-Math.cos(a)*18,
+arrow.y-Math.sin(a)*18
+);
+
+x.lineTo(arrow.x,arrow.y);
+
+x.stroke();
+
+x.fillStyle="white";
+
+x.beginPath();
+x.moveTo(arrow.x,arrow.y);
+
+x.lineTo(
+arrow.x-Math.cos(a-.35)*8,
+arrow.y-Math.sin(a-.35)*8
+);
+
+x.lineTo(
+arrow.x-Math.cos(a+.35)*8,
+arrow.y-Math.sin(a+.35)*8
+);
+
+x.fill();
+
+}
+
+x.fillStyle="#111";
+x.fillRect(10,10,210,80);
+
+x.fillStyle="white";
+x.font="18px monospace";
+x.fillText("Score: "+score,20,35);
+x.fillText("Power: "+power.toFixed(0),20,58);
+x.fillText("Angle: "+(-angle*57.3).toFixed(0)+"°",20,81);
+
+x.fillStyle="rgba(255,255,255,.8)";
+x.font="16px sans-serif";
+x.fillText("↑↓ Aim   ←→ Power   SPACE Fire",250,30);
+
+}
+
+(function loop(){
+update();
+draw();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
