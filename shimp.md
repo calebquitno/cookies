@@ -15,6 +15,8 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        overflow-x: hidden;
+        overflow-y: hidden;
         padding-bottom: 200px;
     }
 
@@ -71,7 +73,6 @@
     }
 
     .score {
-        margin-top: 20px;
         font-size: 1.5rem;
     }
 
@@ -82,22 +83,23 @@
         border-radius: 50%;
         animation: floatUp 1.2s ease-out forwards;
         pointer-events: none;
+        z-index: 999;
     }
 
     @keyframes floatUp {
-        0% { opacity: 1; transform: translateY(0) scale(1); }
-        100% { opacity: 0; transform: translateY(-120px) scale(1.2); }
+        0% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.2); }
     }
 
-    #spawnArea {
-        position: relative;
-        width: 100%;
-        height: 300px;
-        margin-top: 20px;
+    .upgrade-row {
+        margin-top: 25px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        justify-content: center;
     }
 
     .upgrade-btn {
-        margin-top: 25px;
         padding: 10px 20px;
         background: rgba(255,255,255,0.15);
         border: 2px solid rgba(255,255,255,0.4);
@@ -132,23 +134,24 @@
 
     <button id="clickButton" class="spawn-btn">Click Me</button>
 
-    <div class="score">Rohens: <span id="scoreCount">0</span></div>
+    <div class="score" style="margin-top:20px;">
+        Rohens: <span id="scoreCount">0</span>
+    </div>
 
-    <div class="score">Auto‑Rohens: <span id="autoCount">0</span></div>
+    <div class="upgrade-row">
+        <button id="upgradeButton" class="upgrade-btn" disabled>
+            <img src="RohenLibraries/IMG_6401.jpg" class="upgrade-icon">
+            Auto‑Rohen (+1/sec) — Cost: <span id="upgradeCost">50</span>
+        </button>
 
-    <div id="spawnArea"></div>
-
-    <button id="upgradeButton" class="upgrade-btn" disabled>
-        <img src="images/IMG_6401.jpg" class="upgrade-icon">
-        Auto‑Rohen (+1/sec) — Cost: <span id="upgradeCost">50</span>
-    </button>
+        <div class="score">Auto‑Rohens: <span id="autoCount">0</span></div>
+    </div>
 </div>
 
 <script>
     const clickButton = document.getElementById("clickButton");
     const scoreCount = document.getElementById("scoreCount");
     const autoCount = document.getElementById("autoCount");
-    const spawnArea = document.getElementById("spawnArea");
     const upgradeButton = document.getElementById("upgradeButton");
     const upgradeCostDisplay = document.getElementById("upgradeCost");
 
@@ -156,26 +159,36 @@
     let autoClicks = 0;
     let upgradeCost = 50;
 
+    const sound = new Audio("RohenLibraries/RohenHello.mp3");
+
     function spawnHead() {
         const head = document.createElement("img");
-        head.src = "images/IMG_6400.jpg";
+        head.src = "RohenLibraries/IMG_6400.jpg";
         head.classList.add("floating-head");
 
-        const x = Math.random() * (spawnArea.clientWidth - 80);
-        head.style.left = x + "px";
-        head.style.bottom = "0px";
+        const x = Math.random() * window.innerWidth;
+        const y = Math.random() * window.innerHeight;
 
-        spawnArea.appendChild(head);
+        head.style.left = x + "px";
+        head.style.top = y + "px";
+
+        document.body.appendChild(head);
         setTimeout(() => head.remove(), 1200);
     }
 
-    clickButton.addEventListener("click", () => {
+    function generateRohen() {
         score++;
         scoreCount.textContent = score;
+
         spawnHead();
 
+        sound.currentTime = 0;
+        sound.play();
+
         if (score >= upgradeCost) upgradeButton.disabled = false;
-    });
+    }
+
+    clickButton.addEventListener("click", generateRohen);
 
     upgradeButton.addEventListener("click", () => {
         if (score >= upgradeCost) {
@@ -198,11 +211,7 @@
 
     setInterval(() => {
         if (autoClicks > 0) {
-            score += autoClicks;
-            scoreCount.textContent = score;
-            spawnHead();
-
-            if (score >= upgradeCost) upgradeButton.disabled = false;
+            generateRohen();
         }
     }, 1000);
 </script>
