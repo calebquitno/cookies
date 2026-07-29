@@ -1,6 +1,7 @@
-# cookies
+# Cookies
 
 Coolest Fermilab project ever.
+This is a collaborative project by the 2026 VALOR JROTC Internship cohort.
 
 [Notes for the coding classes](classes.html)
 
@@ -19,10 +20,11 @@ List of pages:
 - [Platformer](platformer.html)
 - [Lights](anims.html)
 - [HTML Examples](expl.html)
-- [Dodge](laserdodge.html)
 - [Find a 7-Eleven](find711.html)
+- [Dodge](laserdodge.html)
 - [Cammyissocool](Camryn.html)
 - [Dodge 2!](dodge2.html)
+- [Dodge 3!!](dodge3.html)
 - [PCs](pcs.html)
 - [PCs for Gaming](pcs2.html)
 - [My Cool Website](coolwebsite.html)
@@ -32,8 +34,6 @@ List of pages:
 - [Very cool Dino Game](DinosaurGame.html)
 - [CrazyCortez](CrazyCortez.html)
 
-## Dodge3 dropped!
-- [Dodge 3!!](dodge3.html)
 
 [These pages on GitHub](https://github.com/mambelli/cookies)
 
