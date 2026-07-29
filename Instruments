@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Instrument Hero 🎵</title>
+
+<style>
+
+body {
+    background: linear-gradient(#202050, #080812);
+    color:white;
+    font-family:Arial, sans-serif;
+    text-align:center;
+}
+
+h1 {
+    font-size:50px;
+}
+
+h2 {
+    margin-top:20px;
+}
+
+select {
+    font-size:22px;
+    padding:10px;
+    border-radius:10px;
+}
+
+#instrumentDisplay {
+    font-size:30px;
+    margin:20px;
+}
+
+#note {
+    font-size:90px;
+    color:#00ffcc;
+    text-shadow:0 0 20px #00ffcc;
+}
+
+#score {
+    font-size:30px;
+    margin:20px;
+}
+
+#message {
+    font-size:25px;
+    height:40px;
+}
+
+
+.keyboard {
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-top:30px;
+}
+
+
+.key {
+
+    width:80px;
+    height:150px;
+    background:white;
+    color:black;
+    margin:5px;
+
+    border-radius:10px;
+
+    display:flex;
+    justify-content:center;
+    align-items:end;
+
+    padding-bottom:15px;
+
+    font-size:25px;
+
+    cursor:pointer;
+
+    box-shadow:0 5px 10px black;
+
+}
+
+
+.key:hover {
+
+    background:#00ffcc;
+    transform:scale(1.05);
+
+}
+
+
+.key:active {
+
+    transform:scale(.95);
+
+}
+
+
+.instructions {
+
+    margin-top:30px;
+    font-size:18px;
+    color:#ddd;
+
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<h1>🎵 Instrument Hero 🎵</h1>
+
+
+<select id="instrument" onchange="changeInstrument()">
+
+<option value="flute">🪈 Flute</option>
+
+<option value="piano">🎹 Piano</option>
+
+<option value="guitar">🎸 Guitar</option>
+
+<option value="drums">🥁 Drums</option>
+
+</select>
+
+
+
+<div id="instrumentDisplay">
+Current Instrument: Flute
+</div>
+
+
+
+<h2>Play This Note:</h2>
+
+<div id="note">
+C
+</div>
+
+
+<div id="score">
+Score: 0
+</div>
+
+
+<div id="message">
+Good luck!
+</div>
+
+
+
+<div class="keyboard">
+
+<div class="key" onclick="playNote('C')">
+C
+</div>
+
+<div class="key" onclick="playNote('D')">
+D
+</div>
+
+<div class="key" onclick="playNote('E')">
+E
+</div>
+
+<div class="key" onclick="playNote('F')">
+F
+</div>
+
+<div class="key" onclick="playNote('G')">
+G
+</div>
+
+<div class="key" onclick="playNote('A')">
+A
+</div>
+
+<div class="key" onclick="playNote('B')">
+B
+</div>
+
+
+</div>
+
+
+
+<div class="instructions">
+
+Keyboard controls:<br>
+
+A = C &nbsp;
+S = D &nbsp;
+D = E &nbsp;
+F = F &nbsp;
+G = G &nbsp;
+H = A &nbsp;
+J = B
+
+</div>
+
+
+
+<script>
+
+
+let notes = [
+"C",
+"D",
+"E",
+"F",
+"G",
+"A",
+"B"
+];
+
+
+
+let frequencies = {
+
+
+"C":261.63,
+
+"D":293.66,
+
+"E":329.63,
+
+"F":349.23,
+
+"G":392.00,
+
+"A":440.00,
+
+"B":493.88
+
+
+};
+
+
+
+let targetNote;
+
+let score = 0;
+
+
+
+function newChallenge(){
+
+targetNote =
+notes[Math.floor(Math.random()*notes.length)];
+
+document.getElementById("note").innerHTML =
+targetNote;
+
+
+}
+
+
+
+function changeInstrument(){
+
+let instrument =
+document.getElementById("instrument").value;
+
+
+document.getElementById("instrumentDisplay").innerHTML =
+"Current Instrument: "
++
+instrument.charAt(0).toUpperCase()
++
+instrument.slice(1);
+
+
+}
+
+
+
+
+function playNote(note){
+
+
+let instrument =
+document.getElementById("instrument").value;
+
+
+
+createSound(
+note,
+instrument
+);
+
+
+
+if(note === targetNote){
+
+
+score++;
+
+
+document.getElementById("message").innerHTML =
+"✅ Correct!";
+
+
+}
+
+else{
+
+
+score--;
+
+
+document.getElementById("message").innerHTML =
+"❌ Try again!";
+
+
+}
+
+
+
+document.getElementById("score").innerHTML =
+"Score: "
++
+score;
+
+
+
+newChallenge();
+
+
+}
+
+
+
+
+function createSound(note,instrument){
+
+
+let audio =
+new AudioContext();
+
+
+
+let oscillator =
+audio.createOscillator();
+
+
+let gain =
+audio.createGain();
+
+
+
+oscillator.frequency.value =
+frequencies[note];
+
+
+
+if(instrument === "flute"){
+
+// soft flute sound
+
+oscillator.type="sine";
+
+gain.gain.value=.35;
+
+}
+
+
+
+if(instrument === "piano"){
+
+// piano-like sound
+
+oscillator.type="triangle";
+
+gain.gain.value=.45;
+
+}
+
+
+
+if(instrument === "guitar"){
+
+// guitar-like sound
+
+oscillator.type="sawtooth";
+
+gain.gain.value=.25;
+
+}
+
+
+
+if(instrument === "drums"){
+
+
+oscillator.type="square";
+
+
+gain.gain.value=.15;
+
+
+}
+
+
+
+oscillator.connect(gain);
+
+gain.connect(audio.destination);
+
+
+
+oscillator.start();
+
+
+
+gain.gain.exponentialRampToValueAtTime(
+
+0.001,
+
+audio.currentTime + 1
+
+);
+
+
+
+oscillator.stop(
+
+audio.currentTime + 1
+
+);
+
+
+
+}
+
+
+
+
+
+// keyboard controls
+
+
+document.addEventListener(
+
+"keydown",
+
+function(event){
+
+
+let key =
+event.key.toLowerCase();
+
+
+
+let keyboardNotes = {
+
+
+"a":"C",
+
+"s":"D",
+
+"d":"E",
+
+"f":"F",
+
+"g":"G",
+
+"h":"A",
+
+"j":"B"
+
+
+};
+
+
+
+if(keyboardNotes[key]){
+
+
+playNote(
+keyboardNotes[key]
+);
+
+
+}
+
+
+}
+
+
+
+);
+
+
+
+newChallenge();
+
+
+
+</script>
+
+
+</body>
+</html>
